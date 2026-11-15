@@ -3,12 +3,14 @@ import { speciesByLocal, MY_CATCH, portOf, FISHER_STATS } from '../data/market'
 import { NOW, peso, phtTime } from '../lib/format'
 import { Card, CardHead, Stat, Bar, Tag, Empty } from '../components/ui'
 import { Spark } from '../components/Chart'
+import SpeciesArt from '../components/SpeciesArt'
 import { IconAlert, IconSnow, IconBox, IconBoat } from '../components/Icons'
 
 /* Seeded wobble so "spoilage risk" reads like a real sensor feed, not random noise. */
 const hash = (s) => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 997, 7)
 
-export default function Inventory() {
+export default function Inventory({ role }) {
+  const fisher = role === 'fisher'
   const rows = useMemo(
     () =>
       MY_CATCH.map((c, i) => {
@@ -43,7 +45,7 @@ export default function Inventory() {
           <p className="sub">What you landed, what is still on ice, and how long before it starts losing value.</p>
         </div>
         <div className="topbar-right">
-          <span className="pill live">
+          <span className="pill">
             <IconSnow size={13} /> cold chain nominal
           </span>
         </div>
@@ -51,45 +53,43 @@ export default function Inventory() {
 
       <div className="grid four" style={{ marginBottom: 13 }}>
         <Stat k="Stock on hand" v={`${totalKg} kg`} d={`${rows.length} lots · ${rows.filter((r) => r.status === 'listed').length} listed`} />
-        <Stat k="Stock value" v={peso(totalValue)} d="at today's landing prices" />
-        <Stat k="Spoilage risk" v={`${atRisk.length} lots`} tone={atRisk.length ? 'down' : 'up'} d={atRisk.length ? 'sell or chill within 12h' : 'all clear'} />
+        <Stat k="Stock value" v={<span className="up">{peso(totalValue)}</span>} d="at today's landing prices" />
+        <Stat k="Spoilage risk" v={`${atRisk.length} lots`} tone={atRisk.length ? 'down' : ''} d={atRisk.length ? 'sell or chill within 12h' : 'all clear'} />
         <Stat k="Loss this week" v={`${FISHER_STATS.lossPct}%`} tone="up" d={`${FISHER_STATS.kgLost} kg vs 14% before IsdaLink`} />
       </div>
 
       <div className="split">
         <Card>
           <CardHead
-            title="Live catch log"
+            title={fisher ? 'My catch' : 'Live catch log'}
             sub="Each lot keeps a running record: landed, iced, listed, sold."
             right={<span className="pill">Sunday · {phtTime(NOW.toISOString())} PHT</span>}
           />
           {rows.map((r) => (
-            <div key={r.species + r.qtyKg} style={{ padding: '12px 0', borderBottom: '1px solid var(--line)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <span style={{ fontSize: 19 }} aria-hidden="true">
-                  {r.sp.emoji}
-                </span>
-                <div className="grow" style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 650, fontSize: 13 }}>
+            <div key={r.species + r.qtyKg} className="stock-item">
+              <div className="stock-top">
+                <div className="catch-art sm">
+                  <SpeciesArt id={r.sp.id} size={36} />
+                </div>
+                <div className="grow">
+                  <div style={{ fontWeight: 680 }}>
                     {r.sp.local} <span style={{ color: 'var(--muted)', fontWeight: 400 }}>· {r.sp.name}</span>
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                  <div className="row-sub">
                     {r.qtyKg} kg · {r.port.name} · {peso(r.price)}/kg
                   </div>
                 </div>
-                <Spark values={r.series} tone={r.risk >= 60 ? 'var(--coral)' : 'var(--aqua)'} />
-                <div className="r" style={{ fontWeight: 700, fontSize: 13, minWidth: 74, textAlign: 'right' }}>
-                  {peso(r.value)}
-                </div>
+                <Spark values={r.series} tone={r.risk >= 60 ? 'var(--alert)' : 'var(--mist)'} />
+                <div className="r stock-value up">{peso(r.value)}</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className="stock-bottom">
                 <div style={{ flex: 1 }}>
-                  <Bar value={r.risk} max={100} color={r.risk >= 60 ? 'linear-gradient(90deg,var(--sun),var(--coral))' : undefined} />
+                  <Bar value={r.risk} max={100} tone={r.risk >= 60 ? 'alert' : ''} />
                 </div>
-                <span style={{ fontSize: 10.5, color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                <span className="stock-risk">
                   {r.risk}% risk · {Math.max(0, r.shelf - r.hoursOnIce)}h left
                 </span>
-                <Tag grade={r.risk >= 60 ? 'C' : r.risk >= 35 ? 'B' : 'A'}>
+                <Tag grade={r.risk >= 60 ? 'C' : 'B'}>
                   {r.status === 'listed' ? 'LISTED' : r.status === 'risk' ? 'ACT NOW' : 'ON ICE'}
                 </Tag>
               </div>
@@ -104,7 +104,7 @@ export default function Inventory() {
           </div>
         </Card>
 
-        <div style={{ display: 'grid', gap: 13 }}>
+        <div className="stack">
           <Card>
             <CardHead title="This week" sub="Compared with the four weeks before you joined" />
             <div className="row">

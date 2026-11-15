@@ -3,11 +3,13 @@ import { SPECIES, getForecast, getMarketSummary, getDemandHeat } from '../lib/fo
 import { TODAY, peso, pct } from '../lib/format'
 import { Card, CardHead, Stat, Tag, Bar } from '../components/ui'
 import PriceChart from '../components/Chart'
+import SpeciesArt from '../components/SpeciesArt'
 import { IconTrend, IconAlert, IconCheck } from '../components/Icons'
 
-const verdictTone = { hold: 'warn', sell: 'good', 'sell-now': 'good' }
+const verdictTone = { hold: 'info', sell: 'good', 'sell-now': 'good' }
 
 export default function Prices({ role }) {
+  const fisher = role === 'fisher'
   const [id, setId] = useState(SPECIES[0].id)
   const f = useMemo(() => getForecast(id, { today: TODAY, days: 7 }), [id])
   const summary = useMemo(() => getMarketSummary(TODAY), [])
@@ -21,13 +23,15 @@ export default function Prices({ role }) {
     <div className="view fadein">
       <div className="topbar">
         <div>
-          <h1 className="h1">Price intelligence</h1>
+          <h1 className="h1">{fisher ? 'What is my fish worth?' : 'Price intelligence'}</h1>
           <p className="sub">
-            Seven-day outlook per species, blended from historical landings, supply volume, season and fuel costs.
+            {fisher
+              ? 'Today’s landing price and where it is heading this week — so you know when to sell.'
+              : 'Seven-day outlook per species, blended from historical landings, supply volume, season and fuel costs.'}
           </p>
         </div>
         <div className="topbar-right">
-          <span className="pill live">
+          <span className="pill">
             <IconTrend size={13} /> model v2.4 · XGBoost
           </span>
         </div>
@@ -36,13 +40,13 @@ export default function Prices({ role }) {
       <div className="toolbar">
         {SPECIES.map((s) => (
           <button key={s.id} className={`chip ${s.id === id ? 'on' : ''}`} onClick={() => setId(s.id)}>
-            {s.emoji} {s.local}
+            <SpeciesArt id={s.id} size={fisher ? 28 : 22} /> {s.local}
           </button>
         ))}
       </div>
 
       <div className="grid three" style={{ marginBottom: 13 }}>
-        <Stat k={`${sp.local} · today`} v={peso(todayPrice)} d={<><Tag grade="n">{sp.name}</Tag> per kilo at the landing</>} />
+        <Stat k={`${sp.local} · today`} v={<span className="up">{peso(todayPrice)}</span>} d={<><Tag grade="n">{sp.name}</Tag> per kilo at the landing</>} />
         <Stat
           k="7-day direction"
           v={pct(f.deltaPct)}
@@ -61,19 +65,19 @@ export default function Prices({ role }) {
           />
           <PriceChart history={f.history} forecast={f.forecast} />
           <div className="legend">
-            <span><i style={{ background: 'var(--aqua)' }} />recorded</span>
-            <span><i style={{ background: 'var(--aqua)', opacity: 0.5 }} />forecast</span>
-            <span><i style={{ background: 'rgba(53,214,192,.25)' }} />confidence band</span>
+            <span><i />recorded</span>
+            <span><i className="dash" />forecast</span>
+            <span><i className="band" />confidence band</span>
           </div>
         </Card>
 
-        <div style={{ display: 'grid', gap: 13 }}>
+        <div className="stack">
           <Card>
-            <CardHead title="What to do" sub="IsdaLink's call for the next 72 hours" />
+            <CardHead title={fisher ? 'Should I sell now?' : 'What to do'} sub="IsdaLink's call for the next 72 hours" />
             <div className={`alert ${verdictTone[f.recommendation.verdict] || ''}`} style={{ marginBottom: 12 }}>
               {f.recommendation.verdict === 'hold' ? <IconAlert size={15} /> : <IconCheck size={15} />}
               <div>
-                <div style={{ fontWeight: 720, fontSize: 13.5, marginBottom: 3 }}>{f.recommendation.headline}</div>
+                <div className="alert-head">{f.recommendation.headline}</div>
                 <div>{f.recommendation.detail}</div>
               </div>
             </div>
@@ -102,10 +106,10 @@ export default function Prices({ role }) {
                       {d.impact === 'up' ? '↑' : d.impact === 'down' ? '↓' : '→'}
                     </span>
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>{d.note}</div>
+                  <div className="row-sub">{d.note}</div>
                 </div>
                 <div style={{ width: 64 }}>
-                  <Bar value={Math.round((d.weight || 0) * 100)} max={100} color={d.impact === 'down' ? 'var(--coral)' : undefined} />
+                  <Bar value={Math.round((d.weight || 0) * 100)} max={100} tone={d.impact === 'down' ? 'alert' : d.impact === 'up' ? 'money' : ''} />
                 </div>
               </div>
             ))}
@@ -116,20 +120,12 @@ export default function Prices({ role }) {
       <div className="grid two">
         <Card>
           <CardHead title="Demand this week" sub="Buyer search + order volume, normalised 0–100" />
-          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 108, marginTop: 6 }}>
+          <div className="demand">
             {heat.map((d) => (
-              <div key={d.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                <div style={{ fontSize: 10, color: 'var(--muted)' }}>{d.score}</div>
-                <div
-                  style={{
-                    width: '100%',
-                    height: `${Math.max(8, d.score)}%`,
-                    borderRadius: 6,
-                    background: d.score > 70 ? 'linear-gradient(180deg,var(--sun),#c98f22)' : 'linear-gradient(180deg,var(--aqua),#12a08f)',
-                    opacity: d.score > 70 ? 1 : 0.75,
-                  }}
-                />
-                <div style={{ fontSize: 10, color: 'var(--muted)' }}>{d.day}</div>
+              <div key={d.day} className="demand-col">
+                <div className="num">{d.score}</div>
+                <div className={`demand-bar ${d.score > 70 ? 'peak' : ''}`} style={{ height: `${Math.max(8, d.score)}%` }} />
+                <div>{d.day}</div>
               </div>
             ))}
           </div>
@@ -140,9 +136,7 @@ export default function Prices({ role }) {
 
         <Card>
           <CardHead title="Market pulse" sub={summary.note} right={<span className="pill">avg {pct(summary.avgDeltaPct)}</span>} />
-          <div style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '.7px', color: 'var(--muted)', marginBottom: 4 }}>
-            Risers
-          </div>
+          <div className="section-k">Risers</div>
           {summary.risers.map((r) => (
             <div className="row" key={r.id}>
               <span className="grow">
@@ -151,9 +145,7 @@ export default function Prices({ role }) {
               <span className="r up">▲ {r.deltaPct.toFixed(1)}%</span>
             </div>
           ))}
-          <div style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '.7px', color: 'var(--muted)', margin: '14px 0 4px' }}>
-            Fallers
-          </div>
+          <div className="section-k" style={{ marginTop: 14 }}>Fallers</div>
           {summary.fallers.map((r) => (
             <div className="row" key={r.id}>
               <span className="grow">

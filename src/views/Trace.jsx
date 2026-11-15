@@ -1,9 +1,11 @@
 import { useMemo } from 'react'
 import { verifyLot } from '../lib/trace'
-import { peso, phtStamp, phtDate, phtTime, NOW } from '../lib/format'
-import { Card, CardHead, Stat, Tag } from '../components/ui'
+import { phtStamp, phtTime, NOW } from '../lib/format'
+import { Card, CardHead, Stat, Tag, Bar } from '../components/ui'
 import QrCode from '../components/QrCode'
-import { ICONS, IconCheck, IconAlert, IconScan, IconPin, IconQr } from '../components/Icons'
+import SpeciesArt from '../components/SpeciesArt'
+import { speciesByLocal } from '../data/market'
+import { ICONS, IconCheck, IconAlert, IconScan, IconQr } from '../components/Icons'
 
 const iconFor = (name) => ICONS[name] || IconCheck
 
@@ -36,6 +38,7 @@ export default function Trace({ lots, activeId, onSelect, toast }) {
       <div className="toolbar">
         {lots.map((l) => (
           <button key={l.lotId} className={`chip ${l.lotId === lot.lotId ? 'on' : ''}`} onClick={() => onSelect(l.lotId)}>
+            <SpeciesArt id={speciesByLocal(l.species).id} size={22} />
             {l.species} · {l.lotId.slice(-4)}
           </button>
         ))}
@@ -58,9 +61,7 @@ export default function Trace({ lots, activeId, onSelect, toast }) {
           <Card>
             <CardHead title="Lot QR" sub="One label, full history." right={<Tag grade="A">VERIFIED</Tag>} />
             <QrCode matrix={lot.qr?.matrix} size={196} label={lot.lotId} />
-            <div className="mono" style={{ textAlign: 'center', color: 'var(--muted)', marginTop: 10, fontSize: 10.5 }}>
-              {lot.traceUrl}
-            </div>
+            <div className="mono trace-url">{lot.traceUrl}</div>
             <button className="btn full" style={{ marginTop: 12 }}>
               <IconQr size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Print label
             </button>
@@ -89,19 +90,17 @@ export default function Trace({ lots, activeId, onSelect, toast }) {
                 const Ico = iconFor(e.icon)
                 const pending = new Date(e.at) > NOW
                 return (
-                  <div className="tl-item" key={i} style={pending ? { opacity: 0.5 } : undefined}>
-                    <div className={`tl-dot ${e.icon === 'check' ? '' : ''}`}>
-                      <Ico size={11} />
+                  <div className={`tl-item ${pending ? 'pending' : ''}`} key={i}>
+                    <div className={`tl-dot ${typeof e.tempC === 'number' && e.tempC > 4 ? 'breach' : ''}`}>
+                      <Ico size={12} />
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                    <div className="tl-head">
                       <span className="tl-t">{e.label}</span>
                       {pending && <Tag grade="n">SCHEDULED</Tag>}
                       {typeof e.tempC === 'number' && (
-                        <span className="tl-temp" style={e.tempC > 4 ? { color: 'var(--coral)' } : undefined}>
-                          {e.tempC}°C
-                        </span>
+                        <span className={`tl-temp ${e.tempC > 4 ? 'hot' : ''}`}>{e.tempC}°C</span>
                       )}
-                      <span style={{ marginLeft: 'auto', fontSize: 10.5, color: 'var(--muted)' }}>{phtTime(e.at)}</span>
+                      <span className="tl-time">{phtTime(e.at)}</span>
                     </div>
                     <div className="tl-m">
                       {e.place} · {e.actor}
@@ -116,13 +115,11 @@ export default function Trace({ lots, activeId, onSelect, toast }) {
           <div className="grid two">
             <Card>
               <CardHead title="Freshness" sub={f.advice} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ fontSize: 34, fontWeight: 750, letterSpacing: -1.5, color: f.grade === 'A' ? 'var(--aqua)' : f.grade === 'B' ? 'var(--sun)' : 'var(--coral)' }}>
-                  {f.score}
-                </div>
+              <div className="score">
+                <div className={`score-v num ${f.grade === 'C' ? 'c' : ''}`}>{f.score}</div>
                 <div style={{ flex: 1 }}>
-                  <div className="bar"><i style={{ width: `${f.score}%` }} /></div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 7 }}>
+                  <Bar value={f.score} tone={f.grade === 'C' ? 'alert' : ''} />
+                  <div className="row-sub" style={{ marginTop: 7 }}>
                     {f.hoursSinceLanding}h since landing · {f.shelfLifeHours}h shelf life
                   </div>
                 </div>
@@ -134,9 +131,9 @@ export default function Trace({ lots, activeId, onSelect, toast }) {
               {(audit?.checks || []).map((c) => (
                 <div className="row" key={c.label} style={{ padding: '7px 0' }}>
                   {c.ok ? (
-                    <IconCheck size={14} style={{ color: 'var(--aqua)' }} />
+                    <IconCheck size={14} style={{ color: 'var(--mist)' }} />
                   ) : (
-                    <IconAlert size={14} style={{ color: 'var(--coral)' }} />
+                    <IconAlert size={14} style={{ color: 'var(--alert)' }} />
                   )}
                   <div className="grow">
                     <div style={{ fontWeight: 600, fontSize: 11.5 }}>{c.label}</div>

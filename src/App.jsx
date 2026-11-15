@@ -9,9 +9,9 @@ import {
   IconBox,
   IconSnow,
   IconQr,
-  IconFish,
   IconCheck,
 } from './components/Icons'
+import { BrandMark, Wordmark } from './components/Brand'
 import Market from './views/Market'
 import Prices from './views/Prices'
 import Inventory from './views/Inventory'
@@ -110,17 +110,13 @@ export default function App() {
     [listings.length]
   )
 
-  const current = VIEWS.find((v) => v.id === view)
-
   return (
-    <div className="app">
+    <div className={`app ${role}`}>
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">
-            <IconFish size={22} style={{ color: '#04231f' }} />
-          </div>
+          <BrandMark size={28} />
           <div>
-            <div className="brand-name">IsdaLink</div>
+            <Wordmark />
             <div className="brand-sub">Fisher-first seafood</div>
           </div>
         </div>
@@ -148,11 +144,11 @@ export default function App() {
                 Fisher
               </button>
             </div>
-            <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 9, lineHeight: 1.5 }}>
+            <div className="role-who">
               {role === 'buyer' ? 'Resto / wholesaler buying direct.' : 'Nestor, small-scale fisher, Dagupan.'}
             </div>
           </div>
-          <div style={{ fontSize: 10, color: 'var(--muted)', padding: '0 4px', lineHeight: 1.6 }}>
+          <div className="side-note">
             Demo · {new Date(TODAY).toLocaleDateString('en-PH', { day: '2-digit', month: 'short', year: 'numeric' })} · data is
             simulated
           </div>
@@ -160,10 +156,21 @@ export default function App() {
       </aside>
 
       <main className="main">
+        <div className="mobile-brand">
+          <BrandMark size={32} />
+          <Wordmark />
+          <div className="role-inline" role="group" aria-label="Switch role">
+            <button className={`role-btn ${role === 'buyer' ? 'on' : ''}`} onClick={() => setRole('buyer')}>
+              Buyer
+            </button>
+            <button className={`role-btn ${role === 'fisher' ? 'on' : ''}`} onClick={() => setRole('fisher')}>
+              Fisher
+            </button>
+          </div>
+        </div>
         {view === 'market' && (
           <Market
             role={role}
-            onRole={setRole}
             listings={listings}
             orders={orders}
             toast={toast}
@@ -181,8 +188,8 @@ export default function App() {
           />
         )}
         {view === 'prices' && <Prices role={role} />}
-        {view === 'inventory' && <Inventory />}
-        {view === 'logistics' && <Logistics toast={toast} />}
+        {view === 'inventory' && <Inventory role={role} />}
+        {view === 'logistics' && <Logistics role={role} toast={toast} />}
         {view === 'trace' && (
           <Trace lots={allLots} activeId={lotId} onSelect={setLotId} toast={toast} />
         )}
@@ -199,7 +206,7 @@ export default function App() {
 
       {toastMsg && (
         <div className="toast" key={toastMsg.id}>
-          <IconCheck size={15} style={{ color: 'var(--aqua)' }} />
+          <IconCheck size={16} />
           {toastMsg.msg}
         </div>
       )}

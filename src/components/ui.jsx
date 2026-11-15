@@ -38,11 +38,12 @@ export function Pill({ children, tone = '', title }) {
   )
 }
 
-export function Bar({ value, max = 100, color }) {
+/** tone: '' (neutral) | 'money' | 'alert' — the only two meaning colours. */
+export function Bar({ value, max = 100, tone = '' }) {
   const w = Math.max(0, Math.min(100, (value / max) * 100))
   return (
-    <div className="bar">
-      <i style={{ width: `${w}%`, ...(color ? { background: color } : {}) }} />
+    <div className={tone ? `bar bar-${tone}` : 'bar'}>
+      <i style={{ width: `${w}%` }} />
     </div>
   )
 }

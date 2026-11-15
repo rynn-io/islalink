@@ -26,7 +26,7 @@ const pad = (arr) => {
  * Price chart: solid history line + dashed forecast with a widening band.
  * history/forecast: [{ date, price, low?, high? }]
  */
-export default function PriceChart({ history, forecast, height = 208, accent = 'var(--aqua)' }) {
+export default function PriceChart({ history, forecast, height = 208, accent = 'var(--money)' }) {
   const [ref, width] = useWidth()
   const all = [...history.map((d) => d.price), ...forecast.map((d) => d.price)]
   const lows = forecast.map((d) => d.low ?? d.price)
@@ -64,40 +64,40 @@ export default function PriceChart({ history, forecast, height = 208, accent = '
       <svg width={width} height={height} role="img" aria-label="Price history and forecast chart">
         <defs>
           <linearGradient id="histFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={accent} stopOpacity="0.26" />
+            <stop offset="0%" stopColor={accent} stopOpacity="0.22" />
             <stop offset="100%" stopColor={accent} stopOpacity="0" />
           </linearGradient>
         </defs>
 
         {gridVals.map((v, k) => (
           <g key={k}>
-            <line x1={P.l} x2={width - P.r} y1={Y(v)} y2={Y(v)} stroke="rgba(148,200,214,0.10)" strokeWidth="1" />
-            <text x={P.l - 8} y={Y(v) + 3.5} textAnchor="end" fontSize="9.5" fill="#6d94a4" fontFamily="ui-monospace, monospace">
+            <line className="chart-grid" x1={P.l} x2={width - P.r} y1={Y(v)} y2={Y(v)} strokeWidth="1" />
+            <text className="chart-label mono" x={P.l - 8} y={Y(v) + 3.5} textAnchor="end">
               {Math.round(v)}
             </text>
           </g>
         ))}
 
         {/* forecast band */}
-        <path d={bandPath} fill={accent} opacity="0.11" />
+        <path d={bandPath} fill={accent} opacity="0.14" />
         {/* history area */}
         <path d={`${line(histPts)} L${X(history.length - 1)},${P.t + ih} L${X(0)},${P.t + ih} Z`} fill="url(#histFill)" />
 
         {/* today divider */}
-        <line x1={splitX} x2={splitX} y1={P.t - 4} y2={P.t + ih} stroke="rgba(255,194,71,0.5)" strokeDasharray="3 3" strokeWidth="1" />
-        <text x={splitX + 4} y={P.t + 6} fontSize="9" fill="#ffc247" fontWeight="700">
+        <line className="chart-today" x1={splitX} x2={splitX} y1={P.t - 4} y2={P.t + ih} strokeDasharray="3 3" strokeWidth="1" />
+        <text className="chart-today-label" x={splitX + 4} y={P.t + 6}>
           TODAY
         </text>
 
-        <path d={line(histPts)} fill="none" stroke={accent} strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
-        <path d={line(fcPts)} fill="none" stroke={accent} strokeWidth="2.2" strokeDasharray="5 4" opacity="0.85" strokeLinecap="round" />
+        <path d={line(histPts)} fill="none" stroke={accent} strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={line(fcPts)} fill="none" stroke={accent} strokeWidth="2.4" strokeDasharray="5 4" opacity="0.85" strokeLinecap="round" />
         <circle cx={X(0)} cy={Y(histPts[0].v)} r="2.6" fill={accent} />
-        <circle cx={fcEnd ? X(fcEnd.i) : splitX} cy={fcEnd ? Y(fcEnd.v) : 0} r="3.4" fill={accent} stroke="#05161e" strokeWidth="1.6" />
+        <circle className="chart-dot-ring" cx={fcEnd ? X(fcEnd.i) : splitX} cy={fcEnd ? Y(fcEnd.v) : 0} r="3.6" fill={accent} strokeWidth="1.6" />
 
         {/* x labels */}
         {[...history, ...forecast].map((d, i) =>
           i % labelEvery === 0 || i === history.length + forecast.length - 1 ? (
-            <text key={d.date + i} x={X(i)} y={height - 8} textAnchor="middle" fontSize="9.5" fill="#6d94a4">
+            <text className="chart-label" key={d.date + i} x={X(i)} y={height - 8} textAnchor="middle">
               {d.date.slice(5).replace('-', '/')}
             </text>
           ) : null
@@ -108,7 +108,7 @@ export default function PriceChart({ history, forecast, height = 208, accent = '
 }
 
 /** Tiny trend line for cards. */
-export function Spark({ values, width = 74, height = 24, tone = 'var(--aqua)' }) {
+export function Spark({ values, width = 74, height = 24, tone = 'var(--mist)' }) {
   if (!values || values.length < 2) return null
   const lo = Math.min(...values)
   const hi = Math.max(...values)
