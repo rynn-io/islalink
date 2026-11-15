@@ -132,6 +132,9 @@ Prices are realistic 2026 wet-market pesos: galunggong ~₱180/kg, lapu-lapu ~�
 
 ## Deployment
 
-Deployed on Vercel from `master`. Vite is auto-detected: build `npm run build`, output `dist/`.
+Deployed on Vercel from **`main`** (production branch). Vite is auto-detected: build `npm run build`, output `dist/`.
 
-> **Deployment protection is on.** `islalink-hub6.vercel.app` currently answers with Vercel Authentication rather than the app. Turn it off in the project's **Settings → Deployment Protection** to make the URL public.
+> **Two notes on the live URL.** First, deployment protection is on: `islalink-hub6.vercel.app`
+> answers with Vercel Authentication rather than the app — turn it off in the project's
+> **Settings → Deployment Protection**. Second, `islalink.vercel.app` belongs to a different
+> project, so it is not this app's address.
