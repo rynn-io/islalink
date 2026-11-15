@@ -134,7 +134,5 @@ Prices are realistic 2026 wet-market pesos: galunggong ~₱180/kg, lapu-lapu ~�
 
 Deployed on Vercel from **`main`** (production branch). Vite is auto-detected: build `npm run build`, output `dist/`.
 
-> **Two notes on the live URL.** First, deployment protection is on: `islalink-hub6.vercel.app`
-> answers with Vercel Authentication rather than the app — turn it off in the project's
-> **Settings → Deployment Protection**. Second, `islalink.vercel.app` belongs to a different
-> project, so it is not this app's address.
+- **This app:** https://islalink-hub6.vercel.app
+- `islalink.vercel.app` belongs to a **different** project and is not this app's address.
